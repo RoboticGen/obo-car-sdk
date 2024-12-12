@@ -118,16 +118,20 @@ if car.is_buttonR_pressed():
 
 ## Convert Image to byteArray
 
+This code converts image to byte array.
+
 ```python
 
 import convert.py
-converted = convert.image_to_buffer(r"/Users/sanjulagathsara/Desktop/GitHub Repos/obocar/img2.png")
+converted = convert.image_to_buffer(r"<path_to_image>")
 buffer = converted[0]
 buffer
 
 ```
 
 ## Show Image
+
+Using the previous byte array we can display the image in OLED.
 
 ```python
 
