@@ -2,7 +2,6 @@
 <p align="center">
 <img width="736" height="400" src="https://github.com/RoboticGen/obo-car-sdk/blob/main/IMG/obocar_image.png?raw=true" text="OBO CAR">
   <p align="center">
-    <em>OBO CAR</em>
     </p> 
 ---
 
