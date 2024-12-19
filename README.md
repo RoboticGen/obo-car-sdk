@@ -52,9 +52,10 @@ The **OBOCar SDK** is a lightweight MicroPython library designed for controlling
    - Copy the contents of `obocar.py` into the file.
    - Save the file as `obocar.py` directly onto the ESP32.
 
----
 
-## Once MicroPython is installed, you can connect to the ESP32 via Thonny and start using the SDK. Continue with the usage examples and SDK features listed above!
+Once MicroPython is installed, you can connect to the ESP32 via Thonny and start using the SDK. Continue with the usage examples and SDK features listed above!
+
+---
 
 ## Troubleshooting MicroPython on ESP32
 
@@ -157,7 +158,7 @@ if car.is_buttonR_pressed():
 
 ```
 
-#### **Ultrasonic Sensors**
+## **Ultrasonic Sensors**
 
 The OBOCar SDK includes support for ultrasonic sensors for obstacle detection in three directions: **front**, **left**, and **right**.
 
@@ -177,9 +178,9 @@ print(f"Right distance: {right_distance:.2f} cm")
 
 ---
 
-### Ultrasonic Obstacle Detection
+### Ultrasonic Obstacle Avoidance
 
-The ultrasonic sensors can be used for obstacle detection in all three directions. Example:
+The ultrasonic sensors can be used for obstacle Avoidance. Example:
 
 ```python
 
