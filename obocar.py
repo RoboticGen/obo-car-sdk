@@ -1,5 +1,5 @@
 """
-OBOCar SDK - Version 1.2
+OBOCar SDK - Version 1.3
 =========================
 
 This SDK is designed for controlling the OBOCar, providing easy-to-use APIs for motor control, 
@@ -29,17 +29,15 @@ You can initialize the car with motor pins, buzzer pin, and an OLED display, and
 
 
 
-from machine import Pin, PWM, SoftI2C
+from machine import Pin, PWM, SoftI2C, time_pulse_us
 import time
+import framebuf
 
 MAX_SPEED = 512
             
        
                    
 # MicroPython SSD1306 OLED driver
-
-import time
-import framebuf
 
 class HCSR04:
     """
@@ -75,7 +73,7 @@ class HCSR04:
         time.sleep_us(10)
         self.trigger.value(0)
         try:
-            pulse_time = machine.time_pulse_us(self.echo, 1, self.echo_timeout_us)
+            pulse_time = time_pulse_us(self.echo, 1, self.echo_timeout_us)
             return pulse_time
         except OSError as ex:
             if ex.args[0] == 110: # 110 = ETIMEDOUT
@@ -292,7 +290,7 @@ class Button:
 # ============================
 
 class OBOCar:
-    def __init__(self, motor_pins = {'L1': 5,'L2': 4,'R1': 19,'R2': 18}, buzzer_pin = 2, oled = {'scl': 22,'sda': 21,'width':128,'height':64},buttonL_pin=17, buttonR_pin=16):
+    def __init__(self, motor_pins = {'L1': 5,'L2': 4,'R1': 19,'R2': 18}, buzzer_pin = 2, oled = {'scl': 22,'sda': 21,'width':128,'height':64},buttonL_pin=17, buttonR_pin=16, triggerF_pin=32, echoF_pin=39, triggerL_pin=13, echoL_pin=15, triggerR_pin=23, echoFRpin=36):
         # Motor Control Pins
         self.IA1 = PWM(Pin(motor_pins['L1']))
         self.IB1 = PWM(Pin(motor_pins['L2']))
@@ -316,11 +314,17 @@ class OBOCar:
         
         self.OLED = SSD1306_I2C(oled['width'], oled['height'], self.i2c)
         
+        self.ultrasonic = HCSR04(trigger_pin=triggerF_pin, echo_pin=echoF_pin)
+        self.ultrasonicL = HCSR04(trigger_pin=triggerL_pin, echo_pin=echoL_pin)
+        self.ultrasonicR = HCSR04(trigger_pin=triggerR_pin, echo_pin=echoFRpin)
+        
         # Initialize Buttons
         self.buttonL = Button(buttonL_pin)
         self.buttonR = Button(buttonR_pin)
         
         self.stop()
+        
+        self.beep()
     
     # Motor Control Methods
     def stop(self):
@@ -390,7 +394,6 @@ class OBOCar:
             self.OLED.text(message, x, y, 1)  # Display message
             self.OLED.show()  # Update the display
     
-    
     def start_tone(self):
         self.buzzer.play_sequence(start_tone_sequence)
         
@@ -406,6 +409,16 @@ class OBOCar:
         while True:
             # Add logic to control the car
             time.sleep(delay)
+            
+    def get_front_distance(self):
+        return self.ultrasonic.distance_cm()
+    
+    def get_left_distance(self):
+        return self.ultrasonicL.distance_cm()
+    
+    def get_right_distance(self):
+        return self.ultrasonicR.distance_cm()
+
 
 
 

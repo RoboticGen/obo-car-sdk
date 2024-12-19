@@ -4,9 +4,11 @@
   <p align="center">
     </p> 
 
+---
+
 ## Introduction
 
-The **OBOCar SDK** is a lightweight MicroPython library designed for controlling the OBOCar using the ESP32 microcontroller. It supports motor control, buzzer interaction, OLED display, and button inputs. This guide is tailored for use with **Thonny IDE**.
+The **OBOCar SDK** is a lightweight MicroPython library designed for controlling the OBOCar using the ESP32 microcontroller. It supports motor control, buzzer interaction, OLED display, Ultrasonic Sensors and button inputs. This guide is tailored for use with **Thonny IDE**.
 
 ---
 
@@ -20,40 +22,85 @@ The **OBOCar SDK** is a lightweight MicroPython library designed for controlling
   - Display text messages on an SSD1306 OLED screen.
 - **Buttons**:
   - Detect left and right button presses.
+- **Ultrasonic**:
+  - Measure distances for obstacle detection using front, left, and right sensors.
 
 ---
 
 ## Prerequisites
 
-1. Install **MicroPython** firmware on your ESP32.
-   - Download: [MicroPython.org](https://micropython.org/).
-2. Install **Thonny IDE**.
-   - Download: [Thonny.org](https://thonny.org/).
+1. **Install Thonny IDE**:
+
+   - Download and install Thonny IDE from [Thonny.org](https://thonny.org/).
+
+2. **Install MicroPython on ESP32**:
+
+   - Open Thonny IDE.
+   - Go to `Run -> Configure Interpreter`.
+   - In the "Interpreter" section, select:
+     - **MicroPython (ESP32)** under "MicroPython family."
+     - For the "Port," choose **< Try to detect port Automatically >**
+   - Click **Install or update MicroPython (esptool)**.
+   - Choose:
+     - For the "Target Port," choose the correct **Target Port** for your ESP32 (e.g., `COM3`, `COM4`, `/dev/ttyUSB0`).
+     - **MicroPython family**: ESP32.
+     - **Variant**: Espressif ESP32 / WROOM.
+   - Click **Install** to flash MicroPython onto your ESP32.
+
+3. **Upload the OBOCar SDK**:
+   - Create a new file in Thonny.
+   - Copy the contents of `obocar.py` into the file.
+   - Save the file as `obocar.py` directly onto the ESP32.
 
 ---
+
+## Once MicroPython is installed, you can connect to the ESP32 via Thonny and start using the SDK. Continue with the usage examples and SDK features listed above!
+
+## Troubleshooting MicroPython on ESP32
+
+If you encounter issues such as a **"Backend not ready"** warning or the program seems stuck, follow these steps to reset your ESP32:
+
+1. **Press the Stop Button**:
+
+   - In Thonny, click the red **Stop** button located at the top to interrupt any running code.
+
+2. **Reset via Shell**:
+
+   - If pressing the stop button doesn’t resolve the issue:
+     - Make sure you do not click or interact with the shell section in Thonny.
+     - Instead, press **Ctrl + C** twice in quick succession to force a reset of the ESP32.
+
+3. **Reconnect the Device**:
+
+   - If the device still doesn't respond, unplug and replug your ESP32.
+   - Go to `Run -> Configure Interpreter` and verify the **Target Port** is still correctly set.
+
+4. **Reinstall MicroPython** (Optional):
+   - If the problem persists, you may need to reinstall MicroPython using the instructions provided above.
+
+With these steps, you should be able to regain control of your ESP32 and continue using the OBOCar SDK.
 
 ## Setup
 
 ### Hardware Connections
 
-| **Component**    | **ESP32 Pin** | **Details**                  |
-| ---------------- | ------------- | ---------------------------- |
-| Motor Left (L1)  | GPIO 5        | Motor forward-left control   |
-| Motor Left (L2)  | GPIO 4        | Motor backward-left control  |
-| Motor Right (R1) | GPIO 19       | Motor forward-right control  |
-| Motor Right (R2) | GPIO 18       | Motor backward-right control |
-| Buzzer           | GPIO 2        | Sound output                 |
-| OLED SCL         | GPIO 22       | I2C clock                    |
-| OLED SDA         | GPIO 21       | I2C data                     |
-| Button Left      | GPIO 17       | Detect left button press     |
-| Button Right     | GPIO 16       | Detect right button press    |
-
-### Upload SDK to ESP32
-
-1. Save the SDK code as a file (e.g., `obocar.py`).
-2. Open **Thonny IDE**:
-   - Connect your ESP32.
-   - Upload the file to your device.
+| **Component**                | **ESP32 Pin** | **Details**                  |
+| ---------------------------- | ------------- | ---------------------------- |
+| **Motor Left (L1)**          | GPIO 5        | Motor left control 1         |
+| **Motor Left (L2)**          | GPIO 4        | Motor left control 2         |
+| **Motor Right (R1)**         | GPIO 19       | Motor right control 1        |
+| **Motor Right (R2)**         | GPIO 18       | Motor right control 2        |
+| **Buzzer**                   | GPIO 2        | Sound output                 |
+| **OLED SCL**                 | GPIO 22       | I2C clock                    |
+| **OLED SDA**                 | GPIO 21       | I2C data                     |
+| **Button Left**              | GPIO 17       | Detect left button press     |
+| **Button Right**             | GPIO 16       | Detect right button press    |
+| **Ultrasonic Trigger Front** | GPIO 32       | Trigger pin for front sensor |
+| **Ultrasonic Echo Front**    | GPIO 39       | Echo pin for front sensor    |
+| **Ultrasonic Trigger Left**  | GPIO 13       | Trigger pin for left sensor  |
+| **Ultrasonic Echo Left**     | GPIO 15       | Echo pin for left sensor     |
+| **Ultrasonic Trigger Right** | GPIO 23       | Trigger pin for right sensor |
+| **Ultrasonic Echo Right**    | GPIO 36       | Echo pin for right sensor    |
 
 ---
 
@@ -65,13 +112,7 @@ Initialize the OBOCar using the following example:
 from obocar import OBOCar
 
 # Initialize OBOCar
-car = OBOCar(
-    motor_pins={'L1': 5, 'L2': 4, 'R1': 19, 'R2': 18},
-    buzzer_pin=2,
-    oled={'scl': 22, 'sda': 21, 'width': 128, 'height': 64},
-    buttonL_pin=17,
-    buttonR_pin=16
-)
+car = OBOCar()
 
 ```
 
@@ -116,22 +157,66 @@ if car.is_buttonR_pressed():
 
 ```
 
-## Convert Image to byteArray
+#### **Ultrasonic Sensors**
 
-This code converts image to byte array.
+The OBOCar SDK includes support for ultrasonic sensors for obstacle detection in three directions: **front**, **left**, and **right**.
+
+```python
+# Measure the front distance
+front_distance = car.get_front_distance()
+print(f"Front distance: {front_distance:.2f} cm")
+
+# Measure the left distance
+left_distance = car.get_left_distance()
+print(f"Left distance: {left_distance:.2f} cm")
+
+# Measure the right distance
+right_distance = car.get_right_distance()
+print(f"Right distance: {right_distance:.2f} cm")
+```
+
+---
+
+### Ultrasonic Obstacle Detection
+
+The ultrasonic sensors can be used for obstacle detection in all three directions. Example:
+
+```python
+
+# Simple obstacle avoidance
+
+from obocar import OBOCar
+import time
+car = OBOCar()
+
+while True:
+    front_distance = car.get_front_distance()
+    if front_distance < 20:  # If an obstacle is closer than 20 cm
+        car.move_backward(512)
+        time.sleep(0.3)
+        car.turn_left(512)
+        print("Obstacle detected! Turning...")
+        time.sleep(0.5)
+    else:
+        car.move_forward(speed=512)
+    time.sleep(0.1)
+
+```
+
+---
+
+## Convert Image to byteArray
 
 ```python
 
 import convert.py
-converted = convert.image_to_buffer(r"<path_to_image>")
+converted = convert.image_to_buffer(r"/Users/sanjulagathsara/Desktop/GitHub Repos/obocar/img2.png")
 buffer = converted[0]
 buffer
 
 ```
 
 ## Show Image
-
-Using the previous byte array we can display the image in OLED.
 
 ```python
 
@@ -144,3 +229,6 @@ car.OLED.show()
 
 
 ```
+
+**Contribute:**  
+Suggestions and improvements are welcome! This SDK is designed to be extensible for further development in OBOCAR.
