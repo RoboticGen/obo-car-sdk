@@ -344,7 +344,49 @@ class OBOCar:
         self.IB1.duty(0)
         self.IA2.duty(speed)
         self.IB2.duty(0)
-    
+        
+    def left_motor_forward(self, speed=512):  # Default speed set to half
+        
+        if(speed > MAX_SPEED): #Limiting speed
+            speed = MAX_SPEED
+        elif(speed<0):
+            speed = 0
+            
+        self.IA1.duty(speed)
+        self.IB1.duty(0)
+        
+    def left_motor_backward(self, speed=512):  # Default speed set to half
+        
+        if(speed > MAX_SPEED): #Limiting speed
+            speed = MAX_SPEED
+        elif(speed<0):
+            speed = 0
+            
+        self.IA1.duty(0)
+        self.IB1.duty(speed)
+        
+    def right_motor_forward(self, speed=512):  # Default speed set to half
+        
+        if(speed > MAX_SPEED): #Limiting speed
+            speed = MAX_SPEED
+        elif(speed<0):
+            speed = 0
+            
+        self.IA2.duty(speed)
+        self.IB2.duty(0)
+
+    def right_motor_backward(self, speed=512):  # Default speed set to half
+        
+        if(speed > MAX_SPEED): #Limiting speed
+            speed = MAX_SPEED
+        elif(speed<0):
+            speed = 0
+            
+        self.IA2.duty(0)
+        self.IB2.duty(speed)
+
+
+        
     def move_backward(self, speed=512):  # Default speed set to half
         
         if(speed > MAX_SPEED): #Limiting speed
