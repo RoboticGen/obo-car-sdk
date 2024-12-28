@@ -50,7 +50,19 @@ The **OBOCar SDK** is a lightweight MicroPython library designed for controlling
 3. **Upload the OBOCar SDK**:
    - Create a new file in Thonny.
    - Copy the contents of `obocar.py` into the file.
-   - Save the file as `obocar.py` directly onto the ESP32.
+   - Click Save
+   - Select 'Micropython device'
+   - Rename as `obocar.py`
+   - Select OK
+  
+3. **Upload the Test Code**:
+   - Create a new file in Thonny.
+   - Copy the contents of `boot.py` into the file.
+   - Click Save
+   - Select 'Micropython device'
+   - Rename as `boot.py`
+   - Select OK
+   - Extra : If a dialogue box appeared asking overwriting click OK
 
 
 Once MicroPython is installed, you can connect to the ESP32 via Thonny and start using the SDK. Continue with the usage examples and SDK features listed above!
