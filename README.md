@@ -1,8 +1,9 @@
 # OBOCar SDK Documentation
+
 <p align="center">
 <img width="100%" src="https://github.com/RoboticGen/obo-car-sdk/blob/main/IMG/obocar_image.png?raw=true" text="OBO CAR">
   <p align="center">
-    </p> 
+    </p>
 
 ---
 
@@ -48,14 +49,15 @@ The **OBOCar SDK** is a lightweight MicroPython library designed for controlling
    - Click **Install** to flash MicroPython onto your ESP32.
 
 3. **Upload the OBOCar SDK**:
+
    - Create a new file in Thonny.
    - Copy the contents of `obocar.py` into the file.
    - Click Save
    - Select 'Micropython device'
    - Rename as `obocar.py`
    - Select OK
-  
-3. **Upload the Test Code**:
+
+4. **Upload the Test Code**:
    - Create a new file in Thonny.
    - Copy the contents of `boot.py` into the file.
    - Click Save
@@ -63,7 +65,6 @@ The **OBOCar SDK** is a lightweight MicroPython library designed for controlling
    - Rename as `boot.py`
    - Select OK
    - Extra : If a dialogue box appeared asking overwriting click OK
-
 
 Once MicroPython is installed, you can connect to the ESP32 via Thonny and start using the SDK. Continue with the usage examples and SDK features listed above!
 
@@ -220,14 +221,7 @@ while True:
 
 ## Convert Image to byteArray
 
-```python
-
-import convert.py
-converted = convert.image_to_buffer(r"/Users/sanjulagathsara/Desktop/GitHub Repos/obocar/img2.png")
-buffer = converted[0]
-buffer
-
-```
+Go to Examples/Display/convert.py and run the convert.py file setting the path to image for conversion. Then the byte array will be printed.
 
 ## Show Image
 
