@@ -385,7 +385,6 @@ class OBOCar:
         self.IA2.duty(0)
         self.IB2.duty(speed)
 
-
         
     def move_backward(self, speed=512):  # Default speed set to half
         
@@ -430,7 +429,13 @@ class OBOCar:
     def play_sequence(self, tones):
         self.buzzer.play_sequence(tones)
         
-    def display(self, message,x,y):
+    def display(self, message, x=0, y=0):
+        """
+        Display a message on the OLED screen.
+        message: The message to display
+        x: The x-coordinate of the message (default is 0)
+        y: The y-coordinate of the message (default is 0)
+        """
         if self.OLED:
             self.OLED.fill(0)  # Clear the display
             self.OLED.text(message, x, y, 1)  # Display message
