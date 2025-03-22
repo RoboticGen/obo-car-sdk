@@ -19,11 +19,23 @@ Features:
 
 Usage Example:
 --------------
-You can initialize the car with motor pins, buzzer pin, and an OLED display, and start interacting with it:
+You can initialize the car with the standard pin configuration:
 
-    car = OBOCar(motor_pins, buzzer_pin, oled)
+    car = OBOCar()
     car.move_forward()
     car.display("Hello, World!", 0, 0)
+    
+Or customize specific pins:
+
+    custom_pins = {
+        'motor': {'L1': 12, 'L2': 13},  # Only override specific motor pins
+        'buzzer': 15                     # Change buzzer pin
+    }
+    car = OBOCar(pins=custom_pins)
+    
+    # Access pins externally
+    motor_pin = car.get_pin('motor', 'L1')  # Returns 12
+    buzzer_pin = car.get_pin('buzzer')      # Returns 15
 
 """
 
@@ -290,12 +302,38 @@ class Button:
 # ============================
 
 class OBOCar:
-    def __init__(self, motor_pins = {'L1': 5,'L2': 4,'R1': 19,'R2': 18}, buzzer_pin = 2, oled = {'scl': 22,'sda': 21,'width':128,'height':64},buttonL_pin=17, buttonR_pin=16, triggerF_pin=32, echoF_pin=39, triggerL_pin=13, echoL_pin=15, triggerR_pin=23, echoFRpin=36):
+    """OBOCar - Main class for controlling the OBO autonomous car with motor, sensor, buzzer and display functions"""
+    # Default pin configurations
+    PINS = {
+        'motor': {'L1': 5, 'L2': 4, 'R1': 19, 'R2': 18},
+        'buzzer': 2,
+        'oled': {'scl': 22, 'sda': 21, 'width': 128, 'height': 64},
+        'buttonL': 17,
+        'buttonR': 16,
+        'triggerF': 32,
+        'echoF': 39,
+        'triggerL': 13,
+        'echoL': 15,
+        'triggerR': 23,
+        'echoR': 36
+    }
+    
+    def __init__(self, pins=None):
+        # Initialize pins with defaults, update with any provided pins
+        self.pins = self.PINS.copy()
+        if pins:
+            for category, value in pins.items():
+                if category in self.pins:
+                    if isinstance(value, dict) and isinstance(self.pins[category], dict):
+                        self.pins[category].update(value)
+                    else:
+                        self.pins[category] = value
+        
         # Motor Control Pins
-        self.IA1 = PWM(Pin(motor_pins['L1']))
-        self.IB1 = PWM(Pin(motor_pins['L2']))
-        self.IA2 = PWM(Pin(motor_pins['R1']))
-        self.IB2 = PWM(Pin(motor_pins['R2']))
+        self.IA1 = PWM(Pin(self.pins['motor']['L1']))
+        self.IB1 = PWM(Pin(self.pins['motor']['L2']))
+        self.IA2 = PWM(Pin(self.pins['motor']['R1']))
+        self.IB2 = PWM(Pin(self.pins['motor']['R2']))
         
         # Set PWM frequency (adjust according to your motor specs)
         self.IA1.freq(1000)
@@ -307,20 +345,20 @@ class OBOCar:
         self.stop()
         
         # Initialize Buzzer
-        self.buzzer = Buzzer(buzzer_pin)
+        self.buzzer = Buzzer(self.pins['buzzer'])
         
         # ESP32 Pin assignment 
-        self.i2c = SoftI2C(scl=Pin(oled['scl']), sda=Pin(oled['sda']))
+        self.i2c = SoftI2C(scl=Pin(self.pins['oled']['scl']), sda=Pin(self.pins['oled']['sda']))
         
-        self.OLED = SSD1306_I2C(oled['width'], oled['height'], self.i2c)
+        self.OLED = SSD1306_I2C(self.pins['oled']['width'], self.pins['oled']['height'], self.i2c)
         
-        self.ultrasonic = HCSR04(trigger_pin=triggerF_pin, echo_pin=echoF_pin)
-        self.ultrasonicL = HCSR04(trigger_pin=triggerL_pin, echo_pin=echoL_pin)
-        self.ultrasonicR = HCSR04(trigger_pin=triggerR_pin, echo_pin=echoFRpin)
+        self.ultrasonic = HCSR04(trigger_pin=self.pins['triggerF'], echo_pin=self.pins['echoF'])
+        self.ultrasonicL = HCSR04(trigger_pin=self.pins['triggerL'], echo_pin=self.pins['echoL'])
+        self.ultrasonicR = HCSR04(trigger_pin=self.pins['triggerR'], echo_pin=self.pins['echoR'])
         
         # Initialize Buttons
-        self.buttonL = Button(buttonL_pin)
-        self.buttonR = Button(buttonR_pin)
+        self.buttonL = Button(self.pins['buttonL'])
+        self.buttonR = Button(self.pins['buttonR'])
         
         self.stop()
         
@@ -465,6 +503,18 @@ class OBOCar:
     
     def get_right_distance(self):
         return self.ultrasonicR.distance_cm()
+    
+    def get_pin(self, pin_type, pin_name=None):
+        """Get pin information from the OBOCar"""
+        if pin_type not in self.pins:
+            return None
+            
+        if pin_name is not None and isinstance(self.pins[pin_type], dict):
+            if pin_name in self.pins[pin_type]:
+                return self.pins[pin_type][pin_name]
+            return None
+            
+        return self.pins[pin_type]
 
 
 
