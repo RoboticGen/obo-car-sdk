@@ -45,10 +45,6 @@ from machine import Pin, PWM, SoftI2C, time_pulse_us
 import time
 import framebuf
 
-MAX_SPEED = 512
-            
-       
-                   
 # MicroPython SSD1306 OLED driver
 
 class HCSR04:
@@ -305,6 +301,9 @@ class OBOCar:
         'echoR': 36
     }
     
+    # Maximum speed value for motors
+    MAX_SPEED = 512
+    
     def __init__(self, pins=None):
         # Initialize pins with defaults, update with any provided pins
         self.pins = self.PINS.copy()
@@ -358,10 +357,12 @@ class OBOCar:
         self.IA2.duty(0)
         self.IB2.duty(0)
     
-    def move_forward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def move_forward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
@@ -370,40 +371,48 @@ class OBOCar:
         self.IA2.duty(speed)
         self.IB2.duty(0)
         
-    def left_motor_forward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def left_motor_forward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
         self.IA1.duty(speed)
         self.IB1.duty(0)
         
-    def left_motor_backward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def left_motor_backward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
         self.IA1.duty(0)
         self.IB1.duty(speed)
         
-    def right_motor_forward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def right_motor_forward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
         self.IA2.duty(speed)
         self.IB2.duty(0)
 
-    def right_motor_backward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def right_motor_backward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
@@ -411,10 +420,12 @@ class OBOCar:
         self.IB2.duty(speed)
 
         
-    def move_backward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def move_backward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
         
@@ -423,10 +434,12 @@ class OBOCar:
         self.IA2.duty(0)
         self.IB2.duty(speed)
     
-    def turn_left(self, speed=512):
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def turn_left(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
         
@@ -435,10 +448,12 @@ class OBOCar:
         self.IA2.duty(speed)
         self.IB2.duty(0)
 
-    def turn_right(self, speed=512):
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def turn_right(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
         
