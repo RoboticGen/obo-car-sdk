@@ -19,11 +19,23 @@ Features:
 
 Usage Example:
 --------------
-You can initialize the car with motor pins, buzzer pin, and an OLED display, and start interacting with it:
+You can initialize the car with the standard pin configuration:
 
-    car = OBOCar(motor_pins, buzzer_pin, oled)
+    car = OBOCar()
     car.move_forward()
     car.display("Hello, World!", 0, 0)
+    
+Or customize specific pins:
+
+    custom_pins = {
+        'motor': {'L1': 12, 'L2': 13},  # Only override specific motor pins
+        'buzzer': 15                     # Change buzzer pin
+    }
+    car = OBOCar(pins=custom_pins)
+    
+    # Access pins externally
+    motor_pin = car.get_pin('motor', 'L1')  # Returns 12
+    buzzer_pin = car.get_pin('buzzer')      # Returns 15
 
 """
 
@@ -109,77 +121,93 @@ class HCSR04:
         return cms
 
 
-# register definitions
-SET_CONTRAST        = const(0x81)
-SET_ENTIRE_ON       = const(0xa4)
-SET_NORM_INV        = const(0xa6)
-SET_DISP            = const(0xae)
-SET_MEM_ADDR        = const(0x20)
-SET_COL_ADDR        = const(0x21)
-SET_PAGE_ADDR       = const(0x22)
-SET_DISP_START_LINE = const(0x40)
-SET_SEG_REMAP       = const(0xa0)
-SET_MUX_RATIO       = const(0xa8)
-SET_COM_OUT_DIR     = const(0xc0)
-SET_DISP_OFFSET     = const(0xd3)
-SET_COM_PIN_CFG     = const(0xda)
-SET_DISP_CLK_DIV    = const(0xd5)
-SET_PRECHARGE       = const(0xd9)
-SET_VCOM_DESEL      = const(0xdb)
-SET_CHARGE_PUMP     = const(0x8d)
-
 # ============================
 # SSD1306 Class
 # ============================   
 
 class SSD1306:
-    def __init__(self, width, height, external_vcc):
+    # Register definitions as class attributes
+    SET_CONTRAST        = 0x81
+    SET_ENTIRE_ON       = 0xa4
+    SET_NORM_INV        = 0xa6
+    SET_DISP            = 0xae
+    SET_MEM_ADDR        = 0x20
+    SET_COL_ADDR        = 0x21
+    SET_PAGE_ADDR       = 0x22
+    SET_DISP_START_LINE = 0x40
+    SET_SEG_REMAP       = 0xa0
+    SET_MUX_RATIO       = 0xa8
+    SET_COM_OUT_DIR     = 0xc0
+    SET_DISP_OFFSET     = 0xd3
+    SET_COM_PIN_CFG     = 0xda
+    SET_DISP_CLK_DIV    = 0xd5
+    SET_PRECHARGE       = 0xd9
+    SET_VCOM_DESEL      = 0xdb
+    SET_CHARGE_PUMP     = 0x8d
+    
+    def __init__(self, width, height, i2c, addr=0x3c, external_vcc=False):
         self.width = width
         self.height = height
         self.external_vcc = external_vcc
         self.pages = self.height // 8
-        # Note the subclass must initialize self.framebuf to a framebuffer.
-        # This is necessary because the underlying data buffer is different
-        # between I2C and SPI implementations (I2C needs an extra byte).
-        self.poweron()
+        
+        # I2C related attributes
+        self.i2c = i2c
+        self.addr = addr
+        self.temp = bytearray(2)
+        
+        # Add an extra byte to the data buffer to hold an I2C data/command byte
+        self.buffer = bytearray(((height // 8) * width) + 1)
+        self.buffer[0] = 0x40  # Set first byte of data buffer to Co=0, D/C=1
+        self.framebuf = framebuf.FrameBuffer1(memoryview(self.buffer)[1:], width, height)
+        
         self.init_display()
+
+    def write_cmd(self, cmd):
+        self.temp[0] = 0x80 # Co=1, D/C#=0
+        self.temp[1] = cmd
+        self.i2c.writeto(self.addr, self.temp)
+
+    def write_framebuf(self):
+        # Blast out the frame buffer using a single I2C transaction
+        self.i2c.writeto(self.addr, self.buffer)
 
     def init_display(self):
         for cmd in (
-            SET_DISP | 0x00, # off
+            self.SET_DISP | 0x00, # off
             # address setting
-            SET_MEM_ADDR, 0x00, # horizontal
+            self.SET_MEM_ADDR, 0x00, # horizontal
             # resolution and layout
-            SET_DISP_START_LINE | 0x00,
-            SET_SEG_REMAP | 0x01, # column addr 127 mapped to SEG0
-            SET_MUX_RATIO, self.height - 1,
-            SET_COM_OUT_DIR | 0x08, # scan from COM[N] to COM0
-            SET_DISP_OFFSET, 0x00,
-            SET_COM_PIN_CFG, 0x02 if self.height == 32 else 0x12,
+            self.SET_DISP_START_LINE | 0x00,
+            self.SET_SEG_REMAP | 0x01, # column addr 127 mapped to SEG0
+            self.SET_MUX_RATIO, self.height - 1,
+            self.SET_COM_OUT_DIR | 0x08, # scan from COM[N] to COM0
+            self.SET_DISP_OFFSET, 0x00,
+            self.SET_COM_PIN_CFG, 0x02 if self.height == 32 else 0x12,
             # timing and driving scheme
-            SET_DISP_CLK_DIV, 0x80,
-            SET_PRECHARGE, 0x22 if self.external_vcc else 0xf1,
-            SET_VCOM_DESEL, 0x30, # 0.83*Vcc
+            self.SET_DISP_CLK_DIV, 0x80,
+            self.SET_PRECHARGE, 0x22 if self.external_vcc else 0xf1,
+            self.SET_VCOM_DESEL, 0x30, # 0.83*Vcc
             # display
-            SET_CONTRAST, 0xff, # maximum
-            SET_ENTIRE_ON, # output follows RAM contents
-            SET_NORM_INV, # not inverted
+            self.SET_CONTRAST, 0xff, # maximum
+            self.SET_ENTIRE_ON, # output follows RAM contents
+            self.SET_NORM_INV, # not inverted
             # charge pump
-            SET_CHARGE_PUMP, 0x10 if self.external_vcc else 0x14,
-            SET_DISP | 0x01): # on
+            self.SET_CHARGE_PUMP, 0x10 if self.external_vcc else 0x14,
+            self.SET_DISP | 0x01): # on
             self.write_cmd(cmd)
         self.fill(0)
         self.show()
 
     def poweroff(self):
-        self.write_cmd(SET_DISP | 0x00)
+        self.write_cmd(self.SET_DISP | 0x00)
 
     def contrast(self, contrast):
-        self.write_cmd(SET_CONTRAST)
+        self.write_cmd(self.SET_CONTRAST)
         self.write_cmd(contrast)
 
     def invert(self, invert):
-        self.write_cmd(SET_NORM_INV | (invert & 1))
+        self.write_cmd(self.SET_NORM_INV | (invert & 1))
 
     def show(self):
         x0 = 0
@@ -188,10 +216,10 @@ class SSD1306:
             # displays with width of 64 pixels are shifted by 32
             x0 += 32
             x1 += 32
-        self.write_cmd(SET_COL_ADDR)
+        self.write_cmd(self.SET_COL_ADDR)
         self.write_cmd(x0)
         self.write_cmd(x1)
-        self.write_cmd(SET_PAGE_ADDR)
+        self.write_cmd(self.SET_PAGE_ADDR)
         self.write_cmd(0)
         self.write_cmd(self.pages - 1)
         self.write_framebuf()
@@ -207,35 +235,6 @@ class SSD1306:
 
     def text(self, string, x, y, col=1):
         self.framebuf.text(string, x, y, col)
-
-
-class SSD1306_I2C(SSD1306):
-    def __init__(self, width, height, i2c, addr=0x3c, external_vcc=False):
-        self.i2c = i2c
-        self.addr = addr
-        self.temp = bytearray(2)
-        # Add an extra byte to the data buffer to hold an I2C data/command byte
-        # to use hardware-compatible I2C transactions.  A memoryview of the
-        # buffer is used to mask this byte from the framebuffer operations
-        # (without a major memory hit as memoryview doesn't copy to a separate
-        # buffer).
-        self.buffer = bytearray(((height // 8) * width) + 1)
-        self.buffer[0] = 0x40  # Set first byte of data buffer to Co=0, D/C=1
-        self.framebuf = framebuf.FrameBuffer1(memoryview(self.buffer)[1:], width, height)
-        super().__init__(width, height, external_vcc)
-
-    def write_cmd(self, cmd):
-        self.temp[0] = 0x80 # Co=1, D/C#=0
-        self.temp[1] = cmd
-        self.i2c.writeto(self.addr, self.temp)
-
-    def write_framebuf(self):
-        # Blast out the frame buffer using a single I2C transaction to support
-        # hardware I2C interfaces.
-        self.i2c.writeto(self.addr, self.buffer)
-
-    def poweron(self):
-        pass
 
 
 # ============================
@@ -290,12 +289,38 @@ class Button:
 # ============================
 
 class OBOCar:
-    def __init__(self, motor_pins = {'L1': 5,'L2': 4,'R1': 19,'R2': 18}, buzzer_pin = 2, oled = {'scl': 22,'sda': 21,'width':128,'height':64},buttonL_pin=17, buttonR_pin=16, triggerF_pin=32, echoF_pin=39, triggerL_pin=13, echoL_pin=15, triggerR_pin=23, echoFRpin=36):
+    """OBOCar - Main class for controlling the OBO autonomous car with motor, sensor, buzzer and display functions"""
+    # Default pin configurations
+    PINS = {
+        'motor': {'L1': 5, 'L2': 4, 'R1': 19, 'R2': 18},
+        'buzzer': 2,
+        'oled': {'scl': 22, 'sda': 21, 'width': 128, 'height': 64},
+        'buttonL': 17,
+        'buttonR': 16,
+        'triggerF': 32,
+        'echoF': 39,
+        'triggerL': 13,
+        'echoL': 15,
+        'triggerR': 23,
+        'echoR': 36
+    }
+    
+    def __init__(self, pins=None):
+        # Initialize pins with defaults, update with any provided pins
+        self.pins = self.PINS.copy()
+        if pins:
+            for category, value in pins.items():
+                if category in self.pins:
+                    if isinstance(value, dict) and isinstance(self.pins[category], dict):
+                        self.pins[category].update(value)
+                    else:
+                        self.pins[category] = value
+        
         # Motor Control Pins
-        self.IA1 = PWM(Pin(motor_pins['L1']))
-        self.IB1 = PWM(Pin(motor_pins['L2']))
-        self.IA2 = PWM(Pin(motor_pins['R1']))
-        self.IB2 = PWM(Pin(motor_pins['R2']))
+        self.IA1 = PWM(Pin(self.pins['motor']['L1']))
+        self.IB1 = PWM(Pin(self.pins['motor']['L2']))
+        self.IA2 = PWM(Pin(self.pins['motor']['R1']))
+        self.IB2 = PWM(Pin(self.pins['motor']['R2']))
         
         # Set PWM frequency (adjust according to your motor specs)
         self.IA1.freq(1000)
@@ -307,20 +332,20 @@ class OBOCar:
         self.stop()
         
         # Initialize Buzzer
-        self.buzzer = Buzzer(buzzer_pin)
+        self.buzzer = Buzzer(self.pins['buzzer'])
         
         # ESP32 Pin assignment 
-        self.i2c = SoftI2C(scl=Pin(oled['scl']), sda=Pin(oled['sda']))
+        self.i2c = SoftI2C(scl=Pin(self.pins['oled']['scl']), sda=Pin(self.pins['oled']['sda']))
         
-        self.OLED = SSD1306_I2C(oled['width'], oled['height'], self.i2c)
+        self.OLED = SSD1306(self.pins['oled']['width'], self.pins['oled']['height'], self.i2c)
         
-        self.ultrasonic = HCSR04(trigger_pin=triggerF_pin, echo_pin=echoF_pin)
-        self.ultrasonicL = HCSR04(trigger_pin=triggerL_pin, echo_pin=echoL_pin)
-        self.ultrasonicR = HCSR04(trigger_pin=triggerR_pin, echo_pin=echoFRpin)
+        self.ultrasonic = HCSR04(trigger_pin=self.pins['triggerF'], echo_pin=self.pins['echoF'])
+        self.ultrasonicL = HCSR04(trigger_pin=self.pins['triggerL'], echo_pin=self.pins['echoL'])
+        self.ultrasonicR = HCSR04(trigger_pin=self.pins['triggerR'], echo_pin=self.pins['echoR'])
         
         # Initialize Buttons
-        self.buttonL = Button(buttonL_pin)
-        self.buttonR = Button(buttonR_pin)
+        self.buttonL = Button(self.pins['buttonL'])
+        self.buttonR = Button(self.pins['buttonR'])
         
         self.stop()
         
@@ -385,7 +410,6 @@ class OBOCar:
         self.IA2.duty(0)
         self.IB2.duty(speed)
 
-
         
     def move_backward(self, speed=512):  # Default speed set to half
         
@@ -430,7 +454,13 @@ class OBOCar:
     def play_sequence(self, tones):
         self.buzzer.play_sequence(tones)
         
-    def display(self, message,x,y):
+    def display(self, message, x=0, y=0):
+        """
+        Display a message on the OLED screen.
+        message: The message to display
+        x: The x-coordinate of the message (default is 0)
+        y: The y-coordinate of the message (default is 0)
+        """
         if self.OLED:
             self.OLED.fill(0)  # Clear the display
             self.OLED.text(message, x, y, 1)  # Display message
@@ -460,6 +490,18 @@ class OBOCar:
     
     def get_right_distance(self):
         return self.ultrasonicR.distance_cm()
+    
+    def get_pin(self, pin_type, pin_name=None):
+        """Get pin information from the OBOCar"""
+        if pin_type not in self.pins:
+            return None
+            
+        if pin_name is not None and isinstance(self.pins[pin_type], dict):
+            if pin_name in self.pins[pin_type]:
+                return self.pins[pin_type][pin_name]
+            return None
+            
+        return self.pins[pin_type]
 
 
 
