@@ -9,32 +9,6 @@ speed = 512
 # === Initialize OBOCar object ===
 car = OBOCar()
 
-# === Display Logos ===
-
-# Roboticgen logo byte array (128x33)
-roboticgen_logo = bytearray(
-    b'...'  # Truncated for brevity. Replace with actual logo data.
-)
-
-# OBOCar logo byte array (128x25)
-obocar_logo = bytearray(
-    b'...'  # Truncated for brevity. Replace with actual logo data.
-)
-
-# Display Roboticgen logo
-fb = framebuf.FrameBuffer(roboticgen_logo, 128, 33, framebuf.MONO_HLSB)
-car.OLED.framebuf.blit(fb, 0, 14)
-car.OLED.show()
-
-car.start_tone()  # Play startup tone
-
-# Display OBOCar logo
-fb = framebuf.FrameBuffer(obocar_logo, 128, 25, framebuf.MONO_HLSB)
-car.OLED.fill(0)
-car.OLED.framebuf.blit(fb, 0, 20)
-car.OLED.show()
-time.sleep(2)
-
 
 # === Font bitmaps for custom medium-sized characters ===
 def get_medium_font_bitmap(char):
