@@ -115,7 +115,12 @@ With these steps, you should be able to regain control of your ESP32 and continu
 | **Ultrasonic Echo Left**     | GPIO 15       | Echo pin for left sensor     |
 | **Ultrasonic Trigger Right** | GPIO 23       | Trigger pin for right sensor |
 | **Ultrasonic Echo Right**    | GPIO 36       | Echo pin for right sensor    |
-
+| **IR1**                      | GPIO 12       | IR sensor 1 input            |
+| **IR2**                      | GPIO 14       | IR sensor 2 input            |
+| **IR3**                      | GPIO 27       | IR sensor 3 input            |
+| **IR4**                      | GPIO 26       | IR sensor 4 input            |
+| **IR5**                      | GPIO 25       | IR sensor 5 input            |
+| **IR6**                      | GPIO 33       | IR sensor 6 input            |
 ---
 
 ## Initialization
