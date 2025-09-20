@@ -224,6 +224,53 @@ while True:
 
 ---
 
+
+# OBOCar Testbench Suite
+This contains a complete testbench for the **OBOCar** robotics platform. It allows users to verify the core hardware functionalities such as ultrasonic sensors, motors, IR array, buzzer, and provides a scrollable OLED interface navigated using onboard buttons.
+
+## Upload & Run
+
+1. Flash MicroPython firmware to your board (e.g. ESP32).
+2. Copy `testbench.py` and `obocar.py` to the board using a tool like **Thonny**, **ampy**, or **rshell**.
+3. Run `testbench.py`.
+
+
+
+##  Menu Controls
+
+- **Main Menu**
+  - `Left Button`: Move up
+  - `Right Button`: Move down
+  - **Long press Right**: Select item
+
+- **Test Menu**
+  - `Left Button`: Scroll up
+  - `Right Button`: Scroll down
+  - **Long press Right**: Run selected test
+  - **Long press Left**: Go back to Main Menu
+  - **Short press Left/Right**: Scroll tests
+
+
+
+## Test Options
+
+| Test Name       | Description                                        |
+|-----------------|----------------------------------------------------|
+| 1. Ultrasonic   | Reads front, left, and right ultrasonic sensors    |
+| 2. Motor Check  | Tests movement in all directions                   |
+| 3. Buzzer       | Sounds a tone to verify buzzer operation           |
+| 4. IR Array     | Displays real-time IR readings from IR sensors     |
+
+
+##  Customize
+
+- To add your own tests, simply add a new `(name, function)` pair to the `test_options` list.
+- You can define more custom fonts using `get_medium_font_bitmap()`.
+
+
+---
+
+
 ## Convert Image to byteArray
 
 Go to Examples/Display/convert.py and run the convert.py file setting the path to image for conversion. Then the byte array will be printed.

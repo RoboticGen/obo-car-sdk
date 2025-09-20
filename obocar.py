@@ -41,7 +41,7 @@ Or customize specific pins:
 
 
 
-from machine import Pin, PWM, SoftI2C, time_pulse_us
+from machine import Pin, PWM, SoftI2C, time_pulse_us,ADC
 import time
 import framebuf
 
@@ -284,6 +284,27 @@ class Button:
         return self.button.value() == 0
 
 
+
+
+class IRSensorPanel:
+    def __init__(self, ir_pins):
+        self.ir_sensors = {}
+        for label, pin in ir_pins.items():
+            adc = ADC(Pin(pin))
+            adc.atten(ADC.ATTN_11DB)       # 0–3.3V range
+            adc.width(ADC.WIDTH_10BIT)     # 10-bit resolution (0–1023)
+            self.ir_sensors[label] = adc
+
+    def read_values(self):
+        readings = {}
+        for label, adc in self.ir_sensors.items():
+            readings[label] = adc.read()
+        return readings
+    
+    
+
+
+
 # ============================
 # OBOCar Class
 # ============================
@@ -302,7 +323,8 @@ class OBOCar:
         'triggerL': 13,
         'echoL': 15,
         'triggerR': 23,
-        'echoR': 36
+        'echoR': 36,
+        'ir_pins' : { '1': 12,'5': 14,'3': 27,'4': 26,'2': 25,'6': 33}
     }
     
     def __init__(self, pins=None):
@@ -346,7 +368,8 @@ class OBOCar:
         # Initialize Buttons
         self.buttonL = Button(self.pins['buttonL'])
         self.buttonR = Button(self.pins['buttonR'])
-        
+        # Initialize IR panel
+        self.ir_panel = IRSensorPanel(self.pins['ir_pins'])
         self.stop()
         
         self.beep()
@@ -490,6 +513,17 @@ class OBOCar:
     
     def get_right_distance(self):
         return self.ultrasonicR.distance_cm()
+    # Add Method to Read IR Sensor Values
+    def read_ir_sensors(self):
+        """Read values from all IR sensors."""
+        return self.ir_panel.read_values()
+
+    # Optionally, add a method to get a specific IR sensor value
+    def get_ir_sensor(self, sensor_label):
+        """Read value from a specific IR sensor by label."""
+        readings = self.ir_panel.read_values()
+        return readings.get(sensor_label, None)
+    
     
     def get_pin(self, pin_type, pin_name=None):
         """Get pin information from the OBOCar"""
@@ -502,7 +536,5 @@ class OBOCar:
             return None
             
         return self.pins[pin_type]
-
-
 
 
