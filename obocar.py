@@ -10,6 +10,7 @@ and visual display capabilities.
 Initial creation by Sanjula Gathsara - RoboticGen (Pvt) Ltd
 ===========================================================
 
+
 Features:
 ---------
 - Motor control for forward, backward, and turning motions.
@@ -42,14 +43,10 @@ Or customize specific pins:
 
 
 
-from machine import Pin, PWM, SoftI2C, time_pulse_us
+from machine import Pin, PWM, SoftI2C, time_pulse_us,ADC
 import time
 import framebuf
 
-MAX_SPEED = 512
-            
-       
-                   
 # MicroPython SSD1306 OLED driver
 
 class HCSR04:
@@ -73,6 +70,8 @@ class HCSR04:
 
         # Init echo pin (in)
         self.echo = Pin(echo_pin, mode=Pin.IN, pull=None)
+        
+
 
     def _send_pulse_and_wait(self):
         """
@@ -306,6 +305,11 @@ class OBOCar:
         'echoR': 36
     }
     
+
+    
+    # Maximum speed value for motors
+    MAX_SPEED = 512
+    
     def __init__(self, pins=None):
         # Initialize pins with defaults, update with any provided pins
         self.pins = self.PINS.copy()
@@ -348,6 +352,11 @@ class OBOCar:
         self.buttonL = Button(self.pins['buttonL'])
         self.buttonR = Button(self.pins['buttonR'])
         
+        #Ir pins
+        self.ir_pins = {1:34, 2:35, 3:33, 4:25, 5:26, 6:27}
+        self.ir_adc = {ch: ADC(Pin(pin)) for ch, pin in self.ir_pins.items()}
+        
+        
         self.stop()
         
         self.beep()
@@ -359,10 +368,12 @@ class OBOCar:
         self.IA2.duty(0)
         self.IB2.duty(0)
     
-    def move_forward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def move_forward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
@@ -371,40 +382,48 @@ class OBOCar:
         self.IA2.duty(speed)
         self.IB2.duty(0)
         
-    def left_motor_forward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def left_motor_forward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
         self.IA1.duty(speed)
         self.IB1.duty(0)
         
-    def left_motor_backward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def left_motor_backward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
         self.IA1.duty(0)
         self.IB1.duty(speed)
         
-    def right_motor_forward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def right_motor_forward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
         self.IA2.duty(speed)
         self.IB2.duty(0)
 
-    def right_motor_backward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def right_motor_backward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
             
@@ -412,10 +431,12 @@ class OBOCar:
         self.IB2.duty(speed)
 
         
-    def move_backward(self, speed=512):  # Default speed set to half
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def move_backward(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
         
@@ -424,10 +445,12 @@ class OBOCar:
         self.IA2.duty(0)
         self.IB2.duty(speed)
     
-    def turn_left(self, speed=512):
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def turn_left(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
         
@@ -436,10 +459,12 @@ class OBOCar:
         self.IA2.duty(speed)
         self.IB2.duty(0)
 
-    def turn_right(self, speed=512):
-        
-        if(speed > MAX_SPEED): #Limiting speed
-            speed = MAX_SPEED
+    def turn_right(self, speed=None):
+        if speed is None:
+            speed = self.MAX_SPEED
+            
+        if(speed > self.MAX_SPEED): #Limiting speed
+            speed = self.MAX_SPEED
         elif(speed<0):
             speed = 0
         
@@ -503,7 +528,33 @@ class OBOCar:
             return None
             
         return self.pins[pin_type]
+    def ir_read_raw(self, idx):
+        """Read and print a single IR channel (1..6)."""
+        if idx not in self.ir_adc:
+            print("Invalid IR index:", idx)
+            return None
+        val = self.ir_adc[idx].read()
+        print("IR{}: {}".format(idx, val))
+        return val
 
+    def ir_read_all(self):
+        """Read and print all configured IR channels."""
+        vals = {}
+        for ch, adc in self.ir_adc.items():
+            v = adc.read()
+            vals[ch] = v
+            print("IR{}: {}".format(ch, v))
+        return vals
 
-
+    def ir_read(self):
+        """Tiny REPL: enter 1..6, 'all', or 'q'."""
+        print("Enter 1..6, 'all', or 'q'")
+        while True:
+            s = input("> ").strip().lower()
+            if s in ("q", "quit"):
+                break
+            elif s == "all":
+                self.ir_read_all()
+            else:
+                self.ir_read_raw(int(s))
 
