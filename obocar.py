@@ -31,6 +31,7 @@ Or customize specific pins:
     custom_pins = {
         'motor': {'L1': 12, 'L2': 13},  # Only override specific motor pins
         'buzzer': 15                     # Change buzzer pin
+        'ir': {'IR1': 12, 'IR2': 14, 'IR3': 27, 'IR4': 26, 'IR5': 25, 'IR6': 33},
     }
     car = OBOCar(pins=custom_pins)
     
