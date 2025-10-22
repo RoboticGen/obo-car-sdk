@@ -59,7 +59,7 @@ def ble_irq(event, data):
 
 def advertise():
     
-    name = "Obo Car Hiruna " 
+    name = "Obo Car" 
     # Advertisement data: Flags + Complete Local Name + Service UUID (16-bit)
     service_uuid_bytes = bytearray([0xE0, 0xFF])  # 0xFFE0
     adv_data = (
