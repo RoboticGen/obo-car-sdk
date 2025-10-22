@@ -121,6 +121,7 @@ With these steps, you should be able to regain control of your ESP32 and continu
 | **IR4**                      | GPIO 26       | IR sensor 4 input            |
 | **IR5**                      | GPIO 25       | IR sensor 5 input            |
 | **IR6**                      | GPIO 33       | IR sensor 6 input            |
+
 ---
 
 ## Initialization
@@ -241,6 +242,21 @@ car.OLED.show()
 
 
 ```
+
+### Bluetooth Control
+
+1. Copy the example boot.py from Examples/Bluetooth to your device and save it as boot.py on the ESP32, then reboot so the BLE service starts.
+2. Install the "OBO CAR" mobile app from the Apple App Store or Google Play Store.
+3. Enable Bluetooth on your phone and open the OBO CAR app. The ESP32 will advertise as the device name configured in boot.py (adjustable in the example).
+4. In the app, scan for and connect to the ESP32. No PIN is usually required for BLE connections.
+5. Use the app UI to send drive and control commands; the car should respond immediately.
+6. Troubleshooting:
+
+- If the device does not appear, reboot the ESP32 and confirm boot.py ran (use Thonny's serial shell).
+- Check weather the obocar.py sdk is in the ESP32
+- Grant the app Bluetooth and location permissions if prompted.
+
+Notes: Customize the example boot.py to change the advertised name or control behavior as needed.
 
 **Contribute:**  
 Suggestions and improvements are welcome! This SDK is designed to be extensible for further development in OBOCAR.
