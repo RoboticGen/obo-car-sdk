@@ -373,19 +373,19 @@ class OBOCar:
         if speed is not None:   
             speed_left = speed
             speed_right = speed 
+        else:
+            if speed_left is None:
+                speed_left = self.MAX_SPEED
 
-        if speed_left is None:
-            speed_left = self.MAX_SPEED
+            if speed_right is None:
+                speed_right = self.MAX_SPEED
 
-        if speed_right is None:
-            speed_right = self.MAX_SPEED
-
-        if(speed_left > self.MAX_SPEED): #Limiting speed
+        if(speed_left > self.MAX_SPEED): #Limiting left speed
             speed_left = self.MAX_SPEED
         elif(speed_left<0):
             speed_left = 0
 
-        if(speed_right > self.MAX_SPEED): #Limiting speed
+        if(speed_right > self.MAX_SPEED): #Limiting right speed
             speed_right = self.MAX_SPEED
         elif(speed_right<0):
             speed_right = 0
@@ -449,14 +449,14 @@ class OBOCar:
         if speed is not None:   
             speed_left = speed
             speed_right = speed 
+        else:
+            if speed_left is None:
+                speed_left = self.MAX_SPEED
 
-        if speed_left is None:
-            speed_left = self.MAX_SPEED
-
-        if speed_right is None:
-            speed_right = self.MAX_SPEED
+            if speed_right is None:
+                speed_right = self.MAX_SPEED
             
-        if(speed_left > self.MAX_SPEED): #Limiting speed
+        if(speed_left > self.MAX_SPEED): #Limiting left speed
             speed_left = self.MAX_SPEED
         elif(speed_left<0):
             speed_left = 0
@@ -475,19 +475,19 @@ class OBOCar:
         if speed is not None:   
             speed_left = speed
             speed_right = speed 
+        else:
+            if speed_left is None:
+                speed_left = self.MAX_SPEED
 
-        if speed_left is None:
-            speed_left = self.MAX_SPEED
-
-        if speed_right is None:
-            speed_right = self.MAX_SPEED
+            if speed_right is None:
+                speed_right = self.MAX_SPEED
             
-        if(speed_left > self.MAX_SPEED): #Limiting speed
+        if(speed_left > self.MAX_SPEED): #Limiting left speed
             speed_left = self.MAX_SPEED
         elif(speed_left<0):
             speed_left = 0
 
-        if(speed_right > self.MAX_SPEED): #Limiting speed
+        if(speed_right > self.MAX_SPEED): #Limiting right speed
             speed_right = self.MAX_SPEED
         elif(speed_right<0):
             speed_right = 0
@@ -501,19 +501,19 @@ class OBOCar:
         if speed is not None:   
             speed_left = speed
             speed_right = speed 
+        else:
+            if speed_left is None:
+                speed_left = self.MAX_SPEED
 
-        if speed_left is None:
-            speed_left = self.MAX_SPEED
-
-        if speed_right is None:
-            speed_right = self.MAX_SPEED
+            if speed_right is None:
+                speed_right = self.MAX_SPEED
             
-        if(speed_left > self.MAX_SPEED): #Limiting speed
+        if(speed_left > self.MAX_SPEED): #Limiting left speed
             speed_left = self.MAX_SPEED
         elif(speed_left<0):
             speed_left = 0
 
-        if(speed_right > self.MAX_SPEED): #Limiting speed
+        if(speed_right > self.MAX_SPEED): #Limiting right speed
             speed_right = self.MAX_SPEED
         elif(speed_right<0):
             speed_right = 0
