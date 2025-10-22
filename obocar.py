@@ -368,18 +368,31 @@ class OBOCar:
         self.IA2.duty(0)
         self.IB2.duty(0)
     
-    def move_forward(self, speed=None):
-        if speed is None:
-            speed = self.MAX_SPEED
+    def move_forward(self, speed=None, speed_left=None, speed_right=None):
+
+        if speed is not None:   
+            speed_left = speed
+            speed_right = speed 
+
+        if speed_left is None:
+            speed_left = self.MAX_SPEED
+
+        if speed_right is None:
+            speed_right = self.MAX_SPEED
+
+        if(speed_left > self.MAX_SPEED): #Limiting speed
+            speed_left = self.MAX_SPEED
+        elif(speed_left<0):
+            speed_left = 0
+
+        if(speed_right > self.MAX_SPEED): #Limiting speed
+            speed_right = self.MAX_SPEED
+        elif(speed_right<0):
+            speed_right = 0
             
-        if(speed > self.MAX_SPEED): #Limiting speed
-            speed = self.MAX_SPEED
-        elif(speed<0):
-            speed = 0
-            
-        self.IA1.duty(speed)
+        self.IA1.duty(speed_left)
         self.IB1.duty(0)
-        self.IA2.duty(speed)
+        self.IA2.duty(speed_right)
         self.IB2.duty(0)
         
     def left_motor_forward(self, speed=None):
@@ -431,47 +444,84 @@ class OBOCar:
         self.IB2.duty(speed)
 
         
-    def move_backward(self, speed=None):
-        if speed is None:
-            speed = self.MAX_SPEED
+    def move_backward(self, speed=None , speed_left=None, speed_right=None):
+
+        if speed is not None:   
+            speed_left = speed
+            speed_right = speed 
+
+        if speed_left is None:
+            speed_left = self.MAX_SPEED
+
+        if speed_right is None:
+            speed_right = self.MAX_SPEED
             
-        if(speed > self.MAX_SPEED): #Limiting speed
-            speed = self.MAX_SPEED
-        elif(speed<0):
-            speed = 0
+        if(speed_left > self.MAX_SPEED): #Limiting speed
+            speed_left = self.MAX_SPEED
+        elif(speed_left<0):
+            speed_left = 0
+
+        if(speed_right > self.MAX_SPEED): #Limiting speed
+            speed_right = self.MAX_SPEED
+        elif(speed_right<0):
+            speed_right = 0
         
         self.IA1.duty(0)
         self.IB1.duty(speed)
         self.IA2.duty(0)
         self.IB2.duty(speed)
     
-    def turn_left(self, speed=None):
-        if speed is None:
-            speed = self.MAX_SPEED
+    def turn_left(self, speed=None, speed_left=None, speed_right=None):
+        if speed is not None:   
+            speed_left = speed
+            speed_right = speed 
+
+        if speed_left is None:
+            speed_left = self.MAX_SPEED
+
+        if speed_right is None:
+            speed_right = self.MAX_SPEED
             
-        if(speed > self.MAX_SPEED): #Limiting speed
-            speed = self.MAX_SPEED
-        elif(speed<0):
-            speed = 0
+        if(speed_left > self.MAX_SPEED): #Limiting speed
+            speed_left = self.MAX_SPEED
+        elif(speed_left<0):
+            speed_left = 0
+
+        if(speed_right > self.MAX_SPEED): #Limiting speed
+            speed_right = self.MAX_SPEED
+        elif(speed_right<0):
+            speed_right = 0
         
         self.IA1.duty(0)
-        self.IB1.duty(speed)
-        self.IA2.duty(speed)
+        self.IB1.duty(speed_left)
+        self.IA2.duty(speed_right)
         self.IB2.duty(0)
 
-    def turn_right(self, speed=None):
-        if speed is None:
-            speed = self.MAX_SPEED
+    def turn_right(self, speed=None, speed_left=None, speed_right=None):
+        if speed is not None:   
+            speed_left = speed
+            speed_right = speed 
+
+        if speed_left is None:
+            speed_left = self.MAX_SPEED
+
+        if speed_right is None:
+            speed_right = self.MAX_SPEED
             
-        if(speed > self.MAX_SPEED): #Limiting speed
-            speed = self.MAX_SPEED
-        elif(speed<0):
-            speed = 0
+        if(speed_left > self.MAX_SPEED): #Limiting speed
+            speed_left = self.MAX_SPEED
+        elif(speed_left<0):
+            speed_left = 0
+
+        if(speed_right > self.MAX_SPEED): #Limiting speed
+            speed_right = self.MAX_SPEED
+        elif(speed_right<0):
+            speed_right = 0
         
-        self.IA1.duty(speed)
+        self.IA1.duty(speed_left)
         self.IB1.duty(0)
         self.IA2.duty(0)
-        self.IB2.duty(speed)
+        self.IB2.duty(speed_right)
 
     # Buzzer Control Methods
     def beep(self, freq=1000, duration=0.1):
