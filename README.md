@@ -225,6 +225,36 @@ while True:
 
 ---
 
+## IR Line Sensors
+
+The IR panel has six sensors, IR1 to IR6 (GPIO 12, 14, 27, 26, 25, 33). Each reads
+0-4095: **high on white, low on the black line**. Sensors differ from each other, so
+calibrate before line following.
+
+```python
+car.calibrate_ir(seconds=5)   # slide the car slowly across the line while this runs
+print(car.ir_values())        # [IR1..IR6] raw readings
+print(car.ir_line())          # [IR1..IR6] True where the sensor sees the line
+
+car.ir_test(seconds=30)       # live bar graph on the OLED (line = calibrated threshold)
+```
+
+> IR1-IR5 are on the ESP32's ADC2 pins, which MicroPython can't read while
+> **Wi-Fi** is on. Bluetooth (BLE) is fine.
+
+---
+
+## Battery Level
+
+OBO CAR v2.7 and newer read the battery on GPIO34. On older boards these return `None`.
+
+```python
+print(car.battery_voltage())  # e.g. 3.92 (volts)
+print(car.battery_percent())  # e.g. 73 (rough; while charging it shows the charging voltage)
+```
+
+---
+
 ## Convert Image to byteArray
 
 Go to Examples/Display/convert.py and run the convert.py file setting the path to image for conversion. Then the byte array will be printed.
