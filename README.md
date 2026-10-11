@@ -244,6 +244,17 @@ car.ir_test(seconds=30)       # live bar graph on the OLED (line = calibrated th
 
 ---
 
+## Battery Level
+
+OBO CAR v2.7 and newer read the battery on GPIO34. On older boards these return `None`.
+
+```python
+print(car.battery_voltage())  # e.g. 3.92 (volts)
+print(car.battery_percent())  # e.g. 73 (rough; while charging it shows the charging voltage)
+```
+
+---
+
 ## Convert Image to byteArray
 
 Go to Examples/Display/convert.py and run the convert.py file setting the path to image for conversion. Then the byte array will be printed.

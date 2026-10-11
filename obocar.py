@@ -1,5 +1,5 @@
 """
-OBOCar SDK - Version 1.5.0
+OBOCar SDK - Version 1.6.0
 =========================
 
 This SDK is designed for controlling the OBOCar, providing easy-to-use APIs for motor control, 
@@ -17,6 +17,7 @@ Features:
 - Buzzer control for beeps and sequences.
 - OLED display support for text messages.
 - IR line sensors (IR panel) with per-sensor calibration.
+- Battery voltage (OBO CAR v2.7 and newer).
 - Designed to be easily extensible and adaptable for educational robotics.
 
 Usage Example:
@@ -304,7 +305,8 @@ class OBOCar:
         'echoL': 15,
         'triggerR': 23,
         'echoR': 36,
-        'ir': {'IR1': 12, 'IR2': 14, 'IR3': 27, 'IR4': 26, 'IR5': 25, 'IR6': 33}
+        'ir': {'IR1': 12, 'IR2': 14, 'IR3': 27, 'IR4': 26, 'IR5': 25, 'IR6': 33},
+        'battery': 34   # VBAT/2, OBO CAR v2.7 and newer
     }
     
 
@@ -360,6 +362,7 @@ class OBOCar:
         self.ir_pins = {ch: self.pins['ir']['IR%d' % ch] for ch in range(1, 7)}
         self.ir_adc = {ch: ADC(Pin(pin), atten=ADC.ATTN_11DB) for ch, pin in self.ir_pins.items()}
         self.ir_threshold = {ch: 2048 for ch in self.ir_pins}  # set by calibrate_ir()
+        self._battery_adc = None
         
         
         self.stop()
@@ -658,3 +661,18 @@ class OBOCar:
             self.OLED.show()
             time.sleep_ms(50)
 
+    # Battery (OBO CAR v2.7 and newer: VBAT/2 on GPIO34)
+    def battery_voltage(self):
+        """Battery voltage in volts, or None on boards without battery sensing (v2.6 and older)."""
+        if self._battery_adc is None:
+            self._battery_adc = ADC(Pin(self.pins['battery']), atten=ADC.ATTN_11DB)
+        volts = self._battery_adc.read_uv() * 2 / 1000000
+        return volts if volts > 2.5 else None   # an unconnected pin reads ~0.3 V
+
+    def battery_percent(self):
+        """Rough charge level 0-100 from the cell voltage, or None without battery sensing.
+        While charging this shows the charging voltage, not the resting level."""
+        volts = self.battery_voltage()
+        if volts is None:
+            return None
+        return max(0, min(100, int((volts - 3.3) / (4.15 - 3.3) * 100)))
