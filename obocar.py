@@ -1,5 +1,5 @@
 """
-OBOCar SDK - Version 1.4.0
+OBOCar SDK - Version 1.5.0
 =========================
 
 This SDK is designed for controlling the OBOCar, providing easy-to-use APIs for motor control, 
@@ -16,6 +16,7 @@ Features:
 - Motor control for forward, backward, and turning motions.
 - Buzzer control for beeps and sequences.
 - OLED display support for text messages.
+- IR line sensors (IR panel) with per-sensor calibration.
 - Designed to be easily extensible and adaptable for educational robotics.
 
 Usage Example:
@@ -302,7 +303,8 @@ class OBOCar:
         'triggerL': 13,
         'echoL': 15,
         'triggerR': 23,
-        'echoR': 36
+        'echoR': 36,
+        'ir': {'IR1': 12, 'IR2': 14, 'IR3': 27, 'IR4': 26, 'IR5': 25, 'IR6': 33}
     }
     
 
@@ -312,7 +314,8 @@ class OBOCar:
     
     def __init__(self, pins=None):
         # Initialize pins with defaults, update with any provided pins
-        self.pins = self.PINS.copy()
+        # copy nested dicts too, so custom pins don't change the class defaults
+        self.pins = {k: (v.copy() if isinstance(v, dict) else v) for k, v in self.PINS.items()}
         if pins:
             for category, value in pins.items():
                 if category in self.pins:
@@ -352,9 +355,11 @@ class OBOCar:
         self.buttonL = Button(self.pins['buttonL'])
         self.buttonR = Button(self.pins['buttonR'])
         
-        #Ir pins
-        self.ir_pins = {1:34, 2:35, 3:33, 4:25, 5:26, 6:27}
-        self.ir_adc = {ch: ADC(Pin(pin)) for ch, pin in self.ir_pins.items()}
+        # IR line sensors IR1..IR6 (IR panel). ATTN_11DB reads the full 0-3.3 V range.
+        # A sensor reads higher on white (more reflection) and lower on the black line.
+        self.ir_pins = {ch: self.pins['ir']['IR%d' % ch] for ch in range(1, 7)}
+        self.ir_adc = {ch: ADC(Pin(pin), atten=ADC.ATTN_11DB) for ch, pin in self.ir_pins.items()}
+        self.ir_threshold = {ch: 2048 for ch in self.ir_pins}  # set by calibrate_ir()
         
         
         self.stop()
@@ -607,4 +612,49 @@ class OBOCar:
                 self.ir_read_all()
             else:
                 self.ir_read_raw(int(s))
+
+    def ir_values(self):
+        """Raw readings of IR1..IR6 as a list (0-4095): high on white, low on black.
+        IR1..IR5 are on ADC2 pins: they can't be read while Wi-Fi is on (BLE is fine)."""
+        return [self.ir_adc[ch].read() for ch in range(1, 7)]
+
+    def calibrate_ir(self, seconds=5):
+        """Slide the car slowly across the line (over white and black) for `seconds`.
+        Sets a threshold half-way between white and black for each sensor."""
+        low, high = [4095] * 6, [0] * 6
+        self.display("Calibrating IR..", 0, 0)
+        start = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), start) < seconds * 1000:
+            for i, v in enumerate(self.ir_values()):
+                low[i] = min(low[i], v)
+                high[i] = max(high[i], v)
+            time.sleep_ms(5)
+        for i in range(6):
+            self.ir_threshold[i + 1] = (low[i] + high[i]) // 2
+            note = "  <- little contrast, check this sensor" if high[i] - low[i] < 400 else ""
+            print("IR{}: black {} white {} threshold {}{}".format(i + 1, low[i], high[i], self.ir_threshold[i + 1], note))
+        self.display("IR calibrated", 0, 0)
+        return self.ir_threshold
+
+    def ir_line(self):
+        """[IR1..IR6] True where the sensor sees the black line (needs calibrate_ir())."""
+        return [v < self.ir_threshold[i + 1] for i, v in enumerate(self.ir_values())]
+
+    def ir_test(self, seconds=60):
+        """Live bar graph of IR1..IR6 on the OLED: tall = white, short = black."""
+        fb = self.OLED.framebuf
+        top, height, width = 10, 54, 21
+        start = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), start) < seconds * 1000:
+            self.OLED.fill(0)
+            for i, v in enumerate(self.ir_values()):
+                x = i * width
+                h = v * height // 4095
+                self.OLED.text(str(i + 1), x + 7, 0)
+                fb.rect(x + 4, top, width - 8, height, 1)
+                fb.fill_rect(x + 4, top + height - h, width - 8, h, 1)
+                y = top + height - self.ir_threshold[i + 1] * height // 4095
+                fb.hline(x + 1, y, width - 2, 1)          # calibrated threshold
+            self.OLED.show()
+            time.sleep_ms(50)
 
